@@ -1,6 +1,6 @@
 # paper.yaml — copy this to your paper project and fill in the fields
 
-title: "Untitled Paper"
+title: "Usage Agentic Coding in Safety Critical Systems - How to maintain control"
 
 # Compilation target: overleaf or word
 target: overleaf
@@ -21,7 +21,7 @@ language: en
 whisper_model: large-v3-turbo
 
 # Max literature candidates to return across all sources
-research_max_results: 200
+research_max_results: 50
 
 # Zotero integration (optional)
 # zotero:

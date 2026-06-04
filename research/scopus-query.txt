@@ -1,0 +1,9 @@
+# Scopus Search Query
+
+Copy this into Scopus Advanced Search:
+
+```
+TITLE-ABS-KEY("situation awareness" OR "agentic AI" OR "explainability" OR "domain-driven shared terminology" OR "reflective multi-agent systems" OR "human-AI teaming" OR "industrial process monitoring")
+```
+
+Export results as CSV and save to research/scopus-export.csv
