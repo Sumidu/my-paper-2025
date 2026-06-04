@@ -1,9 +1,7 @@
 # Pandoc defaults for section compilation
-# Used by /paper:deploy for LaTeX output
+# Used by /paper:deploy for LaTeX output (non-standalone, sections only)
 
 standalone: false
-citeproc: true
-pdf-engine: pdflatex
 
 variables:
   graphics: true
