@@ -23,6 +23,7 @@ class PaperConfig:
     whisper_model: str = "large-v3-turbo"
     research_max_results: int = 200
     scholar_max_results: int = 20
+    enrich_min_papers: int = 2
     exclude_sections: list = field(default_factory=list)
     zotero: ZoteroConfig = field(default_factory=ZoteroConfig)
 
@@ -35,6 +36,7 @@ _DEFAULTS = {
     "whisper_model": "large-v3-turbo",
     "research_max_results": 200,
     "scholar_max_results": 20,
+    "enrich_min_papers": 2,
     "exclude_sections": [],
 }
 

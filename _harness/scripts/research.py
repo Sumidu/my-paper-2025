@@ -93,6 +93,12 @@ def _assign_bibkeys(papers: list[dict]) -> None:
         paper["bibkey"] = key
 
 
+def _format_scopus_author(author: str) -> str:
+    """Convert 'Last F.' or 'Last O.A.' → 'Last, F.' / 'Last, O.A.' for BibTeX."""
+    m = re.match(r"^(.+?)\s+([A-Z](?:\.[A-Z])*\.)$", author)
+    return f"{m.group(1)}, {m.group(2)}" if m else author
+
+
 def _read_scopus_csv(path: Path) -> list[dict]:
     """Parse a Scopus CSV export into normalized paper dicts."""
     papers = []
@@ -111,7 +117,7 @@ def _read_scopus_csv(path: Path) -> list[dict]:
             except ValueError:
                 cited = 0
             authors_raw = row.get("Authors", "")
-            authors = [a.strip() for a in authors_raw.split(";") if a.strip()]
+            authors = [_format_scopus_author(a.strip()) for a in authors_raw.split(";") if a.strip()]
             papers.append({
                 "title": title,
                 "authors": authors,

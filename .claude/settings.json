@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '\\nPaperharness — AI-assisted academic writing scaffold\\n\\nPipeline : /paper:kickoff  →  /paper:research  →  /paper:enrich  →  /paper:verifylibrary  →  /paper:sota  →  /paper:write  →  /paper:deploy\\nOther    : /paper:transcribe  /paper:ideate  /paper:rewrite  /paper:pull\\n\\nFirst time? Run: bash _harness/setup.sh\\n'"
+          }
+        ]
+      }
+    ]
+  }
+}

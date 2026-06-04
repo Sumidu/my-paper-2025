@@ -153,6 +153,56 @@ def test_scopus_csv_merged(paper_root):
     assert "brown2023scopus" in bib
 
 
+def test_scopus_single_initial_author_formatted_with_comma(paper_root):
+    scopus_path = paper_root / "research" / "scopus-export.csv"
+    scopus_path.parent.mkdir(parents=True, exist_ok=True)
+    with scopus_path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["Title", "Authors", "Year", "DOI", "Source title", "Abstract", "Cited by"])
+        writer.writeheader()
+        writer.writerow({
+            "Title": "Test Paper",
+            "Authors": "Jiang F.",
+            "Year": "2026",
+            "DOI": "10.1/test",
+            "Source title": "IEEE JSAC",
+            "Abstract": "An abstract about attention.",
+            "Cited by": "0",
+        })
+
+    with patch("research.semantic_scholar.search", return_value=[]), \
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
+        research.run(paper_root)
+
+    bib = (paper_root / "research" / "candidates.bib").read_text()
+    assert "author = {Jiang, F.}" in bib
+
+
+def test_scopus_multi_initial_author_formatted_with_comma(paper_root):
+    scopus_path = paper_root / "research" / "scopus-export.csv"
+    scopus_path.parent.mkdir(parents=True, exist_ok=True)
+    with scopus_path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["Title", "Authors", "Year", "DOI", "Source title", "Abstract", "Cited by"])
+        writer.writeheader()
+        writer.writerow({
+            "Title": "Multi Initial Paper",
+            "Authors": "Dobre O.A.",
+            "Year": "2026",
+            "DOI": "10.1/multi",
+            "Source title": "IEEE JSAC",
+            "Abstract": "An abstract about notifications.",
+            "Cited by": "0",
+        })
+
+    with patch("research.semantic_scholar.search", return_value=[]), \
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
+        research.run(paper_root)
+
+    bib = (paper_root / "research" / "candidates.bib").read_text()
+    assert "author = {Dobre, O.A.}" in bib
+
+
 def test_no_index_md_returns_empty(paper_root):
     (paper_root / "research" / "wiki" / "index.md").unlink()
     result = research.run(paper_root)

@@ -10,6 +10,8 @@ AI-assisted academic writing scaffold. Each command below is a slash command in 
 | `/paper:transcribe` | Transcribe new MP3s in `ideas/recordings/` via Whisper |
 | `/paper:ideate` | Distill transcripts into `research/wiki/index.md` |
 | `/paper:research` | Autonomous literature search, builds wiki + candidates.bib |
+| `/paper:enrich` | Enrich wiki topic pages with Definition + Synthesis blocks; auto-create stubs |
+| `/paper:verifylibrary` | Verify candidates.bib against CrossRef; auto-fix DOIs and year mismatches |
 | `/paper:sota` | Generate state-of-the-art summary from wiki |
 | `/paper:write [section]` | Fill gaps and TODO markers in a section |
 | `/paper:rewrite [section]` | Propose full rewrite of a section with diff preview |
