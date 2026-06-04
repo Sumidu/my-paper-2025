@@ -30,3 +30,7 @@ _harness/sync-state.json
 
 # Audio recordings (large binaries)
 ideas/recordings/
+research/wiki/.obsidian/app.json
+research/wiki/.obsidian/appearance.json
+research/wiki/.obsidian/core-plugins.json
+research/wiki/.obsidian/workspace.json
