@@ -39,7 +39,8 @@ def test_run_creates_candidates_files(paper_root):
     fake_arxiv = [_fake_paper("Notification Study", source="arxiv")]
 
     with patch("research.semantic_scholar.search", return_value=fake_ss), \
-         patch("research.arxiv_client.search", return_value=fake_arxiv):
+         patch("research.arxiv_client.search", return_value=fake_arxiv), \
+         patch("research.google_scholar.search", return_value=[]):
         result = research.run(paper_root)
 
     assert (paper_root / "research" / "candidates.md").exists()
@@ -52,7 +53,8 @@ def test_run_creates_wiki_nodes(paper_root):
     fake_ss = [_fake_paper("Attention Study", doi="10.1145/1")]
 
     with patch("research.semantic_scholar.search", return_value=fake_ss), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         research.run(paper_root)
 
     papers_dir = paper_root / "research" / "wiki" / "papers"
@@ -64,7 +66,8 @@ def test_deduplication_by_doi(paper_root):
     p2 = _fake_paper("Paper A different title", doi="10.1/same", citations=3)
 
     with patch("research.semantic_scholar.search", return_value=[p1, p2]), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         result = research.run(paper_root)
 
     assert result["papers"] == 1
@@ -75,7 +78,8 @@ def test_deduplication_by_normalized_title(paper_root):
     p2 = _fake_paper("Attention and Work")  # exact duplicate, no DOI
 
     with patch("research.semantic_scholar.search", return_value=[p1, p2]), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         result = research.run(paper_root)
 
     assert result["papers"] == 1
@@ -98,7 +102,8 @@ def test_scopus_csv_merged(paper_root):
         })
 
     with patch("research.semantic_scholar.search", return_value=[]), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         result = research.run(paper_root)
 
     assert result["papers"] == 1
@@ -114,7 +119,8 @@ def test_no_index_md_returns_empty(paper_root):
 
 def test_scopus_query_contains_keywords(paper_root):
     with patch("research.semantic_scholar.search", return_value=[]), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         research.run(paper_root)
 
     query = (paper_root / "research" / "scopus-query.txt").read_text()
@@ -125,7 +131,8 @@ def test_scopus_query_contains_keywords(paper_root):
 def test_candidates_bib_valid_bibtex(paper_root):
     fake_ss = [_fake_paper("BibTeX Test", doi="10.1/bib", citations=1)]
     with patch("research.semantic_scholar.search", return_value=fake_ss), \
-         patch("research.arxiv_client.search", return_value=[]):
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
         research.run(paper_root)
 
     bib = (paper_root / "research" / "candidates.bib").read_text()

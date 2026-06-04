@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from lib.config import load_config
 from lib.wiki import read_index_meta, write_paper_node, ensure_topic_stub
 from lib.bibkey import make_bibkey, resolve_collision
-from lib import semantic_scholar, arxiv_client
+from lib import semantic_scholar, arxiv_client, google_scholar
 
 _HARNESS_ROOT = Path(__file__).parent.parent.parent
 
@@ -231,7 +231,10 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
     ax_results = arxiv_client.search(query, limit=per_source)
     print(f"  → {len(ax_results)} results")
 
-    papers: list[dict] = ss_results + ax_results
+    print(f"Searching Google Scholar for: {query}")
+    gs_results = google_scholar.search(query, limit=config.scholar_max_results)
+
+    papers: list[dict] = ss_results + ax_results + gs_results
 
     scopus_path = research_dir / "scopus-export.csv"
     if scopus_path.exists():
