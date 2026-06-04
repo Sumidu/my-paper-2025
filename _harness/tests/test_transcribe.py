@@ -18,10 +18,14 @@ def paper_root(tmp_path):
     return tmp_path
 
 
-def make_mp3(root, name="test_recording.mp3"):
+def make_audio(root, name="test_recording.mp3"):
     path = root / "ideas" / "recordings" / name
-    path.write_bytes(b"fake mp3 content")
+    path.write_bytes(b"fake audio content")
     return path
+
+
+def make_mp3(root, name="test_recording.mp3"):
+    return make_audio(root, name)
 
 
 def test_no_recordings_returns_empty(paper_root):
@@ -81,6 +85,20 @@ def test_non_english_produces_translation(paper_root):
 
     assert len(result) == 2
     assert any("translated" in r for r in result)
+
+
+def test_m4a_recording_is_transcribed(paper_root):
+    make_audio(paper_root, name="voice_memo.m4a")
+    mock_model = MagicMock()
+    mock_model.transcribe.return_value = {"text": "M4A content"}
+
+    with patch("transcribe.load_whisper_model", return_value=mock_model):
+        result = transcribe.run(paper_root)
+
+    assert len(result) == 1
+    assert result[0].endswith(".md")
+    transcript_path = Path(result[0])
+    assert "M4A content" in transcript_path.read_text()
 
 
 def test_translation_calls_whisper_with_translate_task(paper_root):

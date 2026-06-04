@@ -21,28 +21,28 @@ def _find_new_recordings(recordings_dir: Path, transcripts_dir: Path) -> list[Pa
     today = date.today().isoformat()
     existing = {p.stem for p in transcripts_dir.glob("*.md")}
     new = []
-    for mp3 in sorted(recordings_dir.glob("*.mp3")):
-        if f"{today}_{mp3.stem}" not in existing:
-            new.append(mp3)
+    for audio in sorted(recordings_dir.glob("*.mp3")) + sorted(recordings_dir.glob("*.m4a")):
+        if f"{today}_{audio.stem}" not in existing:
+            new.append(audio)
     return new
 
 
 def _transcribe_file(
     model,
-    mp3_path: Path,
+    audio_path: Path,
     output_path: Path,
     language: str,
     task: str = "transcribe",
 ) -> None:
-    result = model.transcribe(str(mp3_path), language=language, task=task)
+    result = model.transcribe(str(audio_path), language=language, task=task)
     text = result["text"].strip()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     label = "Translation" if task == "translate" else "Transcript"
-    output_path.write_text(f"# {label}: {mp3_path.name}\n\n{text}\n")
+    output_path.write_text(f"# {label}: {audio_path.name}\n\n{text}\n")
 
 
 def run(root: Path = _HARNESS_ROOT) -> list[str]:
-    """Transcribe new MP3s. Returns list of created file paths."""
+    """Transcribe new MP3/M4A recordings. Returns list of created file paths."""
     config = load_config(root)
     recordings_dir = root / "ideas" / "recordings"
     transcripts_dir = root / "ideas" / "transcripts"
@@ -59,15 +59,15 @@ def run(root: Path = _HARNESS_ROOT) -> list[str]:
     today = date.today().isoformat()
     created = []
 
-    for mp3 in new:
-        stem = f"{today}_{mp3.stem}"
+    for audio in new:
+        stem = f"{today}_{audio.stem}"
         transcript_path = transcripts_dir / f"{stem}.md"
-        _transcribe_file(model, mp3, transcript_path, config.language)
+        _transcribe_file(model, audio, transcript_path, config.language)
         created.append(str(transcript_path))
 
         if config.language != "en":
             translated_path = translated_dir / f"{stem}.md"
-            _transcribe_file(model, mp3, translated_path, config.language, task="translate")
+            _transcribe_file(model, audio, translated_path, config.language, task="translate")
             created.append(str(translated_path))
 
     return created
@@ -80,4 +80,4 @@ if __name__ == "__main__":
         for path in created:
             print(f"  {path}")
     else:
-        print("No new recordings found in ideas/recordings/")
+        print("No new recordings found in ideas/recordings/ (checked .mp3 and .m4a)")
