@@ -34,6 +34,48 @@ def _fake_paper(title: str, doi: str | None = None, citations: int = 0, source: 
     }
 
 
+def test_first_sentences_returns_two_sentences():
+    text = "This is the first sentence. This is the second. This is the third."
+    assert research._first_sentences(text, n=2) == "This is the first sentence. This is the second."
+
+
+def test_first_sentences_handles_short_abstract():
+    text = "Only one sentence here."
+    assert research._first_sentences(text, n=2) == "Only one sentence here."
+
+
+def test_first_sentences_handles_empty():
+    assert research._first_sentences("", n=2) == ""
+
+
+def test_candidates_md_shows_first_two_sentences(paper_root):
+    abstract = "First claim. Second claim. Third claim that should be omitted."
+    fake = _fake_paper("Abstract Test")
+    fake["abstract"] = abstract
+
+    with patch("research.semantic_scholar.search", return_value=[fake]), \
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
+        research.run(paper_root)
+
+    md = (paper_root / "research" / "candidates.md").read_text()
+    assert "First claim. Second claim." in md
+    assert "Third claim" not in md
+
+
+def test_candidates_md_no_abstract_shows_placeholder(paper_root):
+    fake = _fake_paper("No Abstract")
+    fake["abstract"] = ""
+
+    with patch("research.semantic_scholar.search", return_value=[fake]), \
+         patch("research.arxiv_client.search", return_value=[]), \
+         patch("research.google_scholar.search", return_value=[]):
+        research.run(paper_root)
+
+    md = (paper_root / "research" / "candidates.md").read_text()
+    assert "_No abstract available._" in md
+
+
 def test_run_creates_candidates_files(paper_root):
     fake_ss = [_fake_paper("Attention Study", doi="10.1145/1", citations=10)]
     fake_arxiv = [_fake_paper("Notification Study", source="arxiv")]

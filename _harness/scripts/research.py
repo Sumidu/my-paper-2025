@@ -127,6 +127,12 @@ def _read_scopus_csv(path: Path) -> list[dict]:
     return papers
 
 
+def _first_sentences(text: str, n: int = 2) -> str:
+    """Return the first n sentences of text, preserving trailing punctuation."""
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return " ".join(sentences[:n])
+
+
 def _write_candidates_md(path: Path, papers: list[dict]) -> None:
     lines = ["# Research Candidates\n", f"_{len(papers)} papers found._\n\n---\n"]
     for i, p in enumerate(papers, 1):
@@ -134,9 +140,7 @@ def _write_candidates_md(path: Path, papers: list[dict]) -> None:
         if len(p["authors"]) > 3:
             authors_str += " et al."
         doi_str = f" DOI: {p['doi']}" if p.get("doi") else ""
-        abstract = (p.get("abstract") or "")[:300].rstrip()
-        if len(p.get("abstract", "")) > 300:
-            abstract += "…"
+        abstract = _first_sentences(p.get("abstract") or "", n=2) or "_No abstract available._"
         topics_str = ", ".join(f"[[{t}]]" for t in p.get("topics", []))
         lines.append(
             f"## {i}. {p['title']}\n\n"
