@@ -82,6 +82,7 @@ csl: apa.csl            # citation style (see _harness/templates/csl/)
 citation_package: natbib
 language: en            # ISO 639-1 code for Whisper transcription
 scholar_max_results: 20 # Google Scholar results per run (default: 20)
+enrich_min_papers: 2    # min papers a term must appear in to auto-create a wiki stub (default: 2)
 ```
 
 Optionally edit `.env` to add a Semantic Scholar API key (skipped without one):
@@ -108,6 +109,8 @@ All `/paper:*` commands are now available.
 | `/paper:transcribe` | Transcribe new MP3s and M4As in `ideas/recordings/` via Whisper |
 | `/paper:ideate` | Distill transcripts into `research/wiki/index.md` (research question + keywords) |
 | `/paper:research` | Autonomous literature search → `research/candidates.md` + `candidates.bib` + wiki nodes |
+| `/paper:enrich` | Enrich wiki topic pages with Definition + Synthesis blocks; auto-create stubs for frequent terms |
+| `/paper:verifylibrary` | Verify `candidates.bib` against CrossRef; auto-fix missing DOIs and minor year mismatches |
 | `/paper:sota` | Generate state-of-the-art summary from wiki → `sota/summary.md` |
 | `/paper:write [section]` | Fill empty areas and `<!-- TODO: -->` markers in a section |
 | `/paper:rewrite [section]` | Propose a full rewrite with diff preview — confirm before overwriting |
@@ -258,6 +261,37 @@ Without a key, Semantic Scholar is silently skipped — the other sources still 
 
 ---
 
+## Wiki enrichment
+
+`/paper:enrich` deepens the research wiki after `/paper:research` has populated it:
+
+- **Topic pages** — adds a `Definition` block (one-sentence gloss) and a `Synthesis` block (what the collected papers say about this topic).
+- **Paper pages** — adds a `Related topics` section linking to other wiki nodes that share papers.
+- **Auto-stubs** — scans all abstracts and creates stub topic pages for any term that appears in at least `enrich_min_papers` papers (default: 2). Configure in `paper.yaml`:
+
+```yaml
+enrich_min_papers: 3   # raise to reduce noise, lower to cast a wider net
+```
+
+Run enrichment any time after `/paper:research`. Re-running is safe — existing blocks are updated, not duplicated.
+
+---
+
+## Reference verification
+
+`/paper:verifylibrary` checks every entry in `research/candidates.bib` against the [CrossRef](https://www.crossref.org/) API:
+
+| Issue | Action |
+|---|---|
+| Missing DOI | Auto-filled if CrossRef finds a match |
+| Year off by ±1 | Auto-corrected |
+| Title mismatch | Flagged for your review |
+| DOI 404 / not found | Flagged for your review |
+
+Run it before deploying to catch stale or incorrect metadata. No API key required.
+
+---
+
 ## Overleaf setup
 
 1. Create a project in Overleaf and clone its git repo locally:
@@ -291,4 +325,4 @@ Drop a custom `.csl` file into `article/csl/` and reference it by filename in `p
 cd _harness && .venv/bin/pytest tests/ -v
 ```
 
-90 tests, covering transcription, literature search (Google Scholar, arXiv, Semantic Scholar, Scopus CSV), wiki R/W, BibTeX key generation, section discovery, sync-state, deployment, and Overleaf round-trip.
+125 tests, covering transcription, literature search (Google Scholar, arXiv, Semantic Scholar, Scopus CSV), wiki R/W, BibTeX key generation, section discovery, sync-state, deployment, Overleaf round-trip, wiki enrichment, and CrossRef verification.
