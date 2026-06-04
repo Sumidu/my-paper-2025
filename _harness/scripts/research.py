@@ -224,12 +224,22 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
     query = " ".join(meta.keywords)
 
     print(f"Searching Semantic Scholar for: {query}")
-    ss_results = semantic_scholar.search(query, limit=per_source)
-    print(f"  → {len(ss_results)} results")
+    try:
+        ss_results = semantic_scholar.search(query, limit=per_source)
+        print(f"  → {len(ss_results)} results")
+    except Exception as e:
+        print(f"  → skipped ({e})")
+        ss_results = []
 
-    print(f"Searching arXiv for: {query}")
-    ax_results = arxiv_client.search(query, limit=per_source)
-    print(f"  → {len(ax_results)} results")
+    # Trim query to first 5 keywords to stay within API limits
+    short_query = " ".join(meta.keywords[:5])
+    print(f"Searching arXiv for: {short_query}")
+    try:
+        ax_results = arxiv_client.search(short_query, limit=per_source)
+        print(f"  → {len(ax_results)} results")
+    except Exception as e:
+        print(f"  → skipped ({e})")
+        ax_results = []
 
     papers: list[dict] = ss_results + ax_results
 
