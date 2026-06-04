@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "Startup": [
+    "SessionStart": [
       {
         "hooks": [
           {
