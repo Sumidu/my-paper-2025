@@ -141,7 +141,8 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
             continue
 
         try:
-            if stem == "10_abstract":
+            stem_name = stem.split("_", 1)[1] if "_" in stem else stem
+            if stem_name == "abstract":
                 tex_content = _compile_abstract(md_path)
             else:
                 tex_content = _compile_section_to_tex(md_path, config.citation_package)

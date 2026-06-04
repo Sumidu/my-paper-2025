@@ -117,5 +117,32 @@ def test_run_word_target_calls_pandoc_with_docx(mock_run, paper_root):
     mock_run.return_value = MagicMock(stdout="", returncode=0)
     result = deploy.run(paper_root)
     assert result["target"] == "word"
-    calls_str = str(mock_run.call_args_list)
-    assert "docx" in calls_str
+    # Check that pandoc was called with --to docx in some call
+    all_calls = [str(c) for c in mock_run.call_args_list]
+    assert any("--to" in c and "docx" in c for c in all_calls)
+
+
+@patch("deploy.subprocess.run")
+def test_run_skips_section_on_conflict(mock_run, paper_root, tmp_path):
+    from lib.sync_state import update_section_state, file_hash as fhash
+    overleaf = tmp_path / "overleaf_conflict"
+    overleaf.mkdir()
+    (overleaf / "sections").mkdir()
+    (paper_root / "paper.yaml").write_text(
+        f"title: T\ntarget: overleaf\ncitation_package: natbib\noverleaf_repo: {overleaf}\n"
+    )
+    make_section(paper_root, "11_introduction")
+    md_path = paper_root / "article" / "sections" / "11_introduction.md"
+    tex_path = overleaf / "sections" / "11_introduction.tex"
+    tex_path.write_text("old tex content")
+    state_path = paper_root / "article" / "sync-state.json"
+    # Record a sync state so both sides appear changed since last sync
+    update_section_state("11_introduction", "old_md_hash", fhash(tex_path), state_path)
+    # md already has different content from old_md_hash, tex will also change
+    tex_path.write_text("changed tex content")
+
+    mock_run.return_value = MagicMock(stdout="pandoc 3.0\n", returncode=0)
+    result = deploy.run(paper_root)
+
+    assert "11_introduction" in result["conflicts"]
+    assert result["compiled"] == 0
