@@ -108,3 +108,38 @@ def test_pull_git_failure_returns_empty(mock_run, paper_root, overleaf_repo):
     result = pull.run(paper_root)
 
     assert result == {}
+
+
+@patch("pull.subprocess.run")
+def test_pull_pandoc_error_does_not_crash(mock_run, paper_root, overleaf_repo):
+    (paper_root / "paper.yaml").write_text(
+        f"title: T\noverleaf_repo: {overleaf_repo}\n"
+    )
+    tex = overleaf_repo / "sections" / "11_introduction.tex"
+    tex.write_text("\\section{Introduction}\n")
+
+    git_mock = MagicMock(stdout="Already up to date.\n", returncode=0)
+    pandoc_error = subprocess.CalledProcessError(1, "pandoc", stderr="pandoc: error")
+    mock_run.side_effect = [git_mock, pandoc_error]
+
+    result = pull.run(paper_root)
+
+    # Section not pulled, function returns valid dict
+    assert result["pulled"] == 0
+    assert result["conflicts"] == []
+    assert isinstance(result["skipped"], int)
+
+
+@patch("pull.subprocess.run")
+def test_pull_no_sections_dir_returns_zeros(mock_run, paper_root, tmp_path):
+    overleaf = tmp_path / "overleaf_no_sections"
+    overleaf.mkdir()
+    # No sections/ subdirectory
+    (paper_root / "paper.yaml").write_text(
+        f"title: T\noverleaf_repo: {overleaf}\n"
+    )
+    mock_run.return_value = MagicMock(stdout="Already up to date.\n", returncode=0)
+
+    result = pull.run(paper_root)
+
+    assert result == {"pulled": 0, "conflicts": [], "skipped": 0}

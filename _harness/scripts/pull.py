@@ -76,6 +76,8 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
         stem = tex_path.stem
         md_path = article_dir / "sections" / f"{stem}.md"
 
+        # _tex_changed_since_sync guards the conflict check:
+        # detect_conflict only fires when tex DID change, so md-only changes are never flagged.
         if not _tex_changed_since_sync(stem, tex_path, state_path):
             skipped.append(stem)
             continue
