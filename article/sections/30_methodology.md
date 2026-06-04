@@ -1,0 +1,3 @@
+# Methodology
+
+<!-- TODO: Write methodology -->

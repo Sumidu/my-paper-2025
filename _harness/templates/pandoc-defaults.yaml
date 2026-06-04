@@ -1,0 +1,12 @@
+# Pandoc defaults for section compilation
+# Used by /paper:deploy for LaTeX output
+
+standalone: false
+citeproc: true
+pdf-engine: pdflatex
+
+variables:
+  graphics: true
+
+filters:
+  - pandoc-crossref

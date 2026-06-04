@@ -1,0 +1,20 @@
+# Python
+_harness/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Environment
+.env
+
+# Compiled output
+article/output/
+
+# PDFs (large binaries)
+research/pdfs/
+
+# Sync state (generated)
+_harness/sync-state.json
+
+# macOS
+.DS_Store

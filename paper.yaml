@@ -1,0 +1,33 @@
+# paper.yaml — copy this to your paper project and fill in the fields
+
+title: "Untitled Paper"
+
+# Compilation target: overleaf or word
+target: overleaf
+
+# Path to cloned Overleaf git repo (only needed for overleaf target)
+# overleaf_repo: ../my-paper-overleaf
+
+# Citation style — filename from _harness/templates/csl/ or article/csl/
+csl: apa.csl
+
+# Citation package for LaTeX: natbib or biblatex
+citation_package: natbib
+
+# Whisper transcription language (ISO 639-1, e.g. en, de, nl, es)
+language: en
+
+# Whisper model size: tiny | base | small | medium | large-v3 | large-v3-turbo
+whisper_model: large-v3-turbo
+
+# Max literature candidates to return across all sources
+research_max_results: 200
+
+# Zotero integration (optional)
+# zotero:
+#   collection: "my-paper-2025"
+#   bibtex_export: ~/Zotero/exports/my-paper.bib
+
+# Sections to skip on deploy (draft sections not ready to compile)
+exclude_sections: []
+#  - 99_scratch
