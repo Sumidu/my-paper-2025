@@ -29,8 +29,9 @@ SS_PAPER = {
 
 def test_search_returns_normalized_papers():
     mock_resp = _mock_response({"data": [SS_PAPER], "total": 1})
-    with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
-        results = ss.search("attention hybrid work", limit=10)
+    with patch.dict("os.environ", {"SEMANTIC_SCHOLAR_API_KEY": "fake-key"}):
+        with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
+            results = ss.search("attention hybrid work", limit=10)
 
     assert len(results) == 1
     p = results[0]
@@ -46,18 +47,19 @@ def test_search_returns_normalized_papers():
 
 def test_search_empty_results():
     mock_resp = _mock_response({"data": [], "total": 0})
-    with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
-        results = ss.search("nothing matches", limit=10)
+    with patch.dict("os.environ", {"SEMANTIC_SCHOLAR_API_KEY": "fake-key"}):
+        with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
+            results = ss.search("nothing matches", limit=10)
     assert results == []
 
 
-def test_search_graceful_on_missing_api_key(capsys):
-    mock_resp = _mock_response({"data": [SS_PAPER], "total": 1})
-    with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
-        with patch.dict("os.environ", {}, clear=True):
-            ss.search("test", limit=5)
+def test_search_skipped_on_missing_api_key(capsys):
+    with patch.dict("os.environ", {}, clear=True):
+        results = ss.search("test", limit=5)
     captured = capsys.readouterr()
+    assert results == []
     assert "SEMANTIC_SCHOLAR_API_KEY" in captured.out
+    assert "Skipping" in captured.out
 
 
 def test_search_retries_on_429():
@@ -67,23 +69,26 @@ def test_search_retries_on_429():
 
     ok_resp = _mock_response({"data": [SS_PAPER], "total": 1})
 
-    with patch("lib.semantic_scholar.requests.get", side_effect=[rate_limited, ok_resp]):
-        with patch("lib.semantic_scholar.time.sleep"):
-            results = ss.search("test", limit=5)
+    with patch.dict("os.environ", {"SEMANTIC_SCHOLAR_API_KEY": "fake-key"}):
+        with patch("lib.semantic_scholar.requests.get", side_effect=[rate_limited, ok_resp]):
+            with patch("lib.semantic_scholar.time.sleep"):
+                results = ss.search("test", limit=5)
     assert len(results) == 1
 
 
 def test_search_abstract_defaults_to_empty_string():
     paper_no_abstract = {**SS_PAPER, "abstract": None}
     mock_resp = _mock_response({"data": [paper_no_abstract], "total": 1})
-    with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
-        results = ss.search("test", limit=5)
+    with patch.dict("os.environ", {"SEMANTIC_SCHOLAR_API_KEY": "fake-key"}):
+        with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
+            results = ss.search("test", limit=5)
     assert results[0]["abstract"] == ""
 
 
 def test_search_missing_doi_is_none():
     paper_no_doi = {**SS_PAPER, "externalIds": {}}
     mock_resp = _mock_response({"data": [paper_no_doi], "total": 1})
-    with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
-        results = ss.search("test", limit=5)
+    with patch.dict("os.environ", {"SEMANTIC_SCHOLAR_API_KEY": "fake-key"}):
+        with patch("lib.semantic_scholar.requests.get", return_value=mock_resp):
+            results = ss.search("test", limit=5)
     assert results[0]["doi"] is None

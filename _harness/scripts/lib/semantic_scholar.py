@@ -48,16 +48,18 @@ def _normalize(raw: dict) -> dict:
 
 
 def search(query: str, limit: int = 100) -> list[dict]:
-    """Search Semantic Scholar. Returns list of normalized paper dicts."""
+    """Search Semantic Scholar. Returns list of normalized paper dicts, or [] if no API key."""
     api_key = _get_api_key()
     if api_key is None:
         print(
-            f"No SEMANTIC_SCHOLAR_API_KEY found in environment. "
-            f"Requests will be rate-limited.\n"
-            f"Get a free key at: {_SIGNUP_URL}"
+            f"Skipping Semantic Scholar — no SEMANTIC_SCHOLAR_API_KEY found.\n"
+            f"Free unauthenticated access has been disabled by Semantic Scholar.\n"
+            f"To enable: request a key at {_SIGNUP_URL}\n"
+            f"Then add SEMANTIC_SCHOLAR_API_KEY=<your-key> to your .env file."
         )
+        return []
 
-    headers = {"x-api-key": api_key} if api_key else {}
+    headers = {"x-api-key": api_key}
     results: list[dict] = []
     offset = 0
     batch = min(limit, 100)

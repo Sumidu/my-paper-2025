@@ -223,9 +223,9 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
     per_source = max(limit // 2, 10)
     query = " ".join(meta.keywords)
 
-    print(f"Searching Semantic Scholar for: {query}")
     ss_results = semantic_scholar.search(query, limit=per_source)
-    print(f"  → {len(ss_results)} results")
+    if ss_results:
+        print(f"Semantic Scholar: {len(ss_results)} results")
 
     print(f"Searching arXiv for: {query}")
     ax_results = arxiv_client.search(query, limit=per_source)
