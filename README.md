@@ -24,8 +24,16 @@ Record ideas → Transcribe → Distill into research wiki → Search literature
 | pandoc-crossref | any | `brew install pandoc-crossref` |
 | Claude Code | latest | [claude.ai/code](https://claude.ai/code) |
 | Whisper (optional) | — | installed automatically via pip |
+| Tor (optional) | any | `brew install tor` — faster, safer Google Scholar scraping |
 
-A free [Semantic Scholar API key](https://www.semanticscholar.org/product/api) is recommended for literature search (works without one, but rate-limited).
+**Literature search API keys** — all optional, each source is skipped gracefully if unavailable:
+
+| Source | Key / setup | Notes |
+|---|---|---|
+| Google Scholar | none — scraped via `scholarly` | Rate-limited without Tor; install Tor for safer scraping |
+| Semantic Scholar | `SEMANTIC_SCHOLAR_API_KEY` in `.env` | Free unauthenticated access disabled; [request a key](https://www.semanticscholar.org/product/api) |
+| arXiv | none | Public API, no key needed |
+| Scopus | manual CSV export | Drop `research/scopus-export.csv` to merge (paid Scopus subscription required) |
 
 ---
 
@@ -73,9 +81,10 @@ overleaf_repo: ../my-paper-overleaf   # path to cloned Overleaf git repo (if tar
 csl: apa.csl            # citation style (see _harness/templates/csl/)
 citation_package: natbib
 language: en            # ISO 639-1 code for Whisper transcription
+scholar_max_results: 20 # Google Scholar results per run (default: 20)
 ```
 
-Edit `.env` and add your Semantic Scholar API key:
+Optionally edit `.env` to add a Semantic Scholar API key (skipped without one):
 
 ```
 SEMANTIC_SCHOLAR_API_KEY=your_key_here
@@ -96,7 +105,7 @@ All `/paper:*` commands are now available.
 | Command | What it does |
 |---|---|
 | `/paper:kickoff` | Full pipeline in one shot: transcribe → distill → search literature |
-| `/paper:transcribe` | Transcribe new MP3s in `ideas/recordings/` via Whisper |
+| `/paper:transcribe` | Transcribe new MP3s and M4As in `ideas/recordings/` via Whisper |
 | `/paper:ideate` | Distill transcripts into `research/wiki/index.md` (research question + keywords) |
 | `/paper:research` | Autonomous literature search → `research/candidates.md` + `candidates.bib` + wiki nodes |
 | `/paper:sota` | Generate state-of-the-art summary from wiki → `sota/summary.md` |
@@ -109,13 +118,13 @@ All `/paper:*` commands are now available.
 
 ## Quick-start walkthrough
 
-**1. Record an idea** — drop an MP3 into `ideas/recordings/` (voice memo, Zoom recording, anything).
+**1. Record an idea** — drop an MP3 or M4A into `ideas/recordings/` (voice memo, Zoom recording, anything).
 
 **2. Transcribe and distill:**
 ```
 /paper:kickoff
 ```
-This transcribes the recording, extracts your research question and keywords into `research/wiki/index.md`, and searches Semantic Scholar + arXiv for relevant papers.
+This transcribes the recording, extracts your research question and keywords into `research/wiki/index.md`, and searches Google Scholar, arXiv, and Semantic Scholar (if API key set) for relevant papers.
 
 **3. Review candidates** — open `research/candidates.md` and `research/candidates.bib`. Import the bib into Zotero if you use it.
 
@@ -153,7 +162,7 @@ my-paper-2025/
 ├── .env                         ← API keys (not committed)
 │
 ├── ideas/
-│   ├── recordings/              ← drop MP3s here for /paper:transcribe
+│   ├── recordings/              ← drop MP3s or M4As here for /paper:transcribe
 │   └── transcripts/             ← auto-generated Markdown transcripts
 │       └── translated/          ← auto-translated transcripts (non-English papers)
 │
@@ -214,6 +223,41 @@ Two HTML comment conventions are preserved through all rewrites:
 
 ---
 
+## Literature search
+
+`/paper:research` queries three sources and merges, deduplicates, and ranks the results:
+
+| Source | Access | Rate limiting |
+|---|---|---|
+| **Google Scholar** | Always attempted — no key needed | Tor (5s/req) if installed; otherwise 60s/req to avoid IP ban |
+| **arXiv** | Always attempted — no key needed | Built-in 3s courtesy delay |
+| **Semantic Scholar** | Skipped if no API key in `.env` | API key required (free unauthenticated access disabled) |
+| **Scopus CSV** | Drop `research/scopus-export.csv` to merge | Manual export from Scopus (paid subscription) |
+
+### Google Scholar and Tor
+
+Google Scholar does not have a public API and blocks scrapers. Paperharness uses the [`scholarly`](https://github.com/scholarly-python-package/scholarly) library with two modes:
+
+- **With Tor** (recommended): each request goes through a different Tor circuit, reducing ban risk. Install with `brew install tor` — it's auto-detected on each run.
+- **Without Tor** (fallback): requests are spaced 60 seconds apart. A 20-result run takes ~20 minutes. A CAPTCHA or IP block stops the run early and returns whatever was collected.
+
+To cap how many Scholar results are fetched (default 20), set in `paper.yaml`:
+
+```yaml
+scholar_max_results: 10
+```
+
+### Semantic Scholar
+
+Free unauthenticated access has been disabled by Semantic Scholar. To enable it:
+
+1. Request an API key at [semanticscholar.org/product/api](https://www.semanticscholar.org/product/api)
+2. Add to `.env`: `SEMANTIC_SCHOLAR_API_KEY=your_key_here`
+
+Without a key, Semantic Scholar is silently skipped — the other sources still run.
+
+---
+
 ## Overleaf setup
 
 1. Create a project in Overleaf and clone its git repo locally:
@@ -247,4 +291,4 @@ Drop a custom `.csl` file into `article/csl/` and reference it by filename in `p
 cd _harness && .venv/bin/pytest tests/ -v
 ```
 
-81 tests, covering transcription, literature search, wiki R/W, BibTeX key generation, section discovery, sync-state, deployment, and Overleaf round-trip.
+90 tests, covering transcription, literature search (Google Scholar, arXiv, Semantic Scholar, Scopus CSV), wiki R/W, BibTeX key generation, section discovery, sync-state, deployment, and Overleaf round-trip.

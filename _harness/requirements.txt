@@ -2,3 +2,4 @@ openai-whisper>=20231117
 PyYAML>=6.0
 requests>=2.31
 pytest>=7.4
+scholarly>=1.7

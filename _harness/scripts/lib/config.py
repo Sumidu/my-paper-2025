@@ -22,6 +22,7 @@ class PaperConfig:
     language: str = "en"
     whisper_model: str = "large-v3-turbo"
     research_max_results: int = 200
+    scholar_max_results: int = 20
     exclude_sections: list = field(default_factory=list)
     zotero: ZoteroConfig = field(default_factory=ZoteroConfig)
 
@@ -33,6 +34,7 @@ _DEFAULTS = {
     "language": "en",
     "whisper_model": "large-v3-turbo",
     "research_max_results": 200,
+    "scholar_max_results": 20,
     "exclude_sections": [],
 }
 

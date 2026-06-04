@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from lib.config import load_config
 from lib.wiki import read_index_meta, write_paper_node, ensure_topic_stub
 from lib.bibkey import make_bibkey, resolve_collision
-from lib import semantic_scholar, arxiv_client
+from lib import semantic_scholar, arxiv_client, google_scholar
 
 _HARNESS_ROOT = Path(__file__).parent.parent.parent
 
@@ -127,6 +127,12 @@ def _read_scopus_csv(path: Path) -> list[dict]:
     return papers
 
 
+def _first_sentences(text: str, n: int = 2) -> str:
+    """Return the first n sentences of text, preserving trailing punctuation."""
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return " ".join(sentences[:n])
+
+
 def _write_candidates_md(path: Path, papers: list[dict]) -> None:
     lines = ["# Research Candidates\n", f"_{len(papers)} papers found._\n\n---\n"]
     for i, p in enumerate(papers, 1):
@@ -134,9 +140,7 @@ def _write_candidates_md(path: Path, papers: list[dict]) -> None:
         if len(p["authors"]) > 3:
             authors_str += " et al."
         doi_str = f" DOI: {p['doi']}" if p.get("doi") else ""
-        abstract = (p.get("abstract") or "")[:300].rstrip()
-        if len(p.get("abstract", "")) > 300:
-            abstract += "…"
+        abstract = _first_sentences(p.get("abstract") or "", n=2) or "_No abstract available._"
         topics_str = ", ".join(f"[[{t}]]" for t in p.get("topics", []))
         lines.append(
             f"## {i}. {p['title']}\n\n"
@@ -241,7 +245,10 @@ def run(root: Path = _HARNESS_ROOT) -> dict:
         print(f"  → skipped ({e})")
         ax_results = []
 
-    papers: list[dict] = ss_results + ax_results
+    print(f"Searching Google Scholar for: {query}")
+    gs_results = google_scholar.search(query, limit=config.scholar_max_results)
+
+    papers: list[dict] = ss_results + ax_results + gs_results
 
     scopus_path = research_dir / "scopus-export.csv"
     if scopus_path.exists():
